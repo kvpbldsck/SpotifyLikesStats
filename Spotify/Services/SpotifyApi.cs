@@ -1,5 +1,5 @@
 using System.Net.Http.Json;
-using Spotify.Misc;
+using Misc;
 using Spotify.Models;
 
 namespace Spotify.Services;
@@ -8,7 +8,7 @@ internal sealed partial class SpotifyApi(Settings settings, IHttpReceiver httpRe
 {
     private static HttpClient? _httpClient = null;
 
-    public async Task<ICollection<SpotifyTrack>> GetSavedTracksAsync()
+    public async Task<IReadOnlyCollection<SpotifyTrack>> GetSavedTracksAsync(int pagesToFetch)
     {
         var httpClient = await PrepareHttpClient();
 
@@ -23,7 +23,7 @@ internal sealed partial class SpotifyApi(Settings settings, IHttpReceiver httpRe
             .Uri
             .ToString();
 
-        while (nextBunch is not null)
+        while (nextBunch is not null && result.Count < pagesToFetch)
         {
             var response = await httpClient.GetAsync(nextBunch);
             response.EnsureSuccessStatusCode();

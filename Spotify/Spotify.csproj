@@ -18,4 +18,13 @@
       </Compile>
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Misc\Misc.csproj" />
+      <ProjectReference Include="..\Stats\Stats.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Misc\" />
+    </ItemGroup>
+
 </Project>

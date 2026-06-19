@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Spotify;
 using Spotify.Services;
+using Stats;
 
 namespace SpotifyLikesStats;
 
@@ -18,7 +19,8 @@ public class Program
 
         services
             .AddSingleton(config)
-            .AddSpotify(config);
+            .AddSpotify(config)
+            .AddStats();
 
         var provider = services.BuildServiceProvider();
 
@@ -28,9 +30,21 @@ public class Program
     private static async Task DoStuff(ServiceProvider services)
     {
         var spotifyService = services.GetRequiredService<ISpotifyService>();
+        var statsService = services.GetRequiredService<IStatsService>();
 
-        var tracks = await spotifyService.GetLikedTracksAsync();
+        var tracks = await spotifyService.GetLikedTracksAsync(2);
+        var stats = statsService.GetStats(tracks);
 
         Console.WriteLine(tracks.Count);
+        Console.WriteLine("Top artists:");
+        foreach ((int index, string item) in stats.TopArtists.Index())
+        {
+            Console.WriteLine($"{index + 1}. {item}");
+        }
+        Console.WriteLine("Top albums:");
+        foreach ((int index, string item) in stats.TopAlbums.Index())
+        {
+            Console.WriteLine($"{index + 1}. {item}");
+        }
     }
 }

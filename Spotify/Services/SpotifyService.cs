@@ -1,18 +1,18 @@
-using Spotify.Models;
+using Stats.Models;
 
 namespace Spotify.Services;
 
 internal sealed class SpotifyService(SpotifyApi api) : ISpotifyService
 {
-    public async Task<ICollection<TrackInfoDto>> GetLikedTracksAsync()
+    public async Task<IReadOnlyCollection<TrackInfoDto>> GetLikedTracksAsync(int pagesToFetch)
     {
-        var spotifyResponse = await api.GetSavedTracksAsync();
+        var spotifyResponse = await api.GetSavedTracksAsync(pagesToFetch);
         return spotifyResponse
-            .Select(t => new TrackInfoDto(t.Id, t.Name)
-            {
-                Album = new (t.Album.Id, t.Album.Name),
-                Artists = t.Artists.Select(a => new ArtistInfoDto(a.Id, a.Name)).ToArray()
-            })
+            .Select(t => new TrackInfoDto(
+                t.Id,
+                t.Name,
+                Artists: t.Artists.Select(a => new ArtistInfoDto(a.Id, a.Name)).ToArray(),
+                Album: new (t.Album.Id, t.Album.Name)))
             .ToArray();
     }
 }

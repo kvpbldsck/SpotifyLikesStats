@@ -1,4 +1,6 @@
 <Solution>
+  <Project Path="Misc/Misc.csproj" />
   <Project Path="Spotify/Spotify.csproj" />
   <Project Path="SpotifyLikesStats/SpotifyLikesStats.csproj" />
+  <Project Path="Stats/Stats.csproj" />
 </Solution>

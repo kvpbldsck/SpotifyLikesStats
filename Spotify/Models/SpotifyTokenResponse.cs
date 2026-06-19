@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace Spotify.Models;
 
-public sealed class SpotifyTokenResponse
+internal sealed class SpotifyTokenResponse
 {
     [JsonPropertyName("access_token")]
     public string AccessToken { get; set; }

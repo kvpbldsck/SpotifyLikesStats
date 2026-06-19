@@ -1,8 +1,8 @@
-﻿using Spotify.Models;
+﻿using Stats.Models;
 
 namespace Spotify;
 
 public interface ISpotifyService
 {
-    Task<ICollection<TrackInfoDto>> GetLikedTracksAsync();
+    Task<IReadOnlyCollection<TrackInfoDto>> GetLikedTracksAsync(int pagesToFetch);
 }

@@ -7,13 +7,16 @@ namespace Spotify;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddSpotify(this IServiceCollection services, IConfigurationRoot config)
+    extension(IServiceCollection services)
     {
-        services.AddSingleton<SpotifyApi>();
-        services.AddSingleton<ISpotifyService, SpotifyService>();
-        services.AddSingleton<IHttpReceiver, HttpReceiver>();
-        services.AddSingleton(config.GetSection(Settings.SectionName).Get<Settings>()!);
+        public IServiceCollection AddSpotify(IConfigurationRoot config)
+        {
+            services.AddSingleton<SpotifyApi>();
+            services.AddSingleton<ISpotifyService, SpotifyService>();
+            services.AddSingleton<IHttpReceiver, HttpReceiver>();
+            services.AddSingleton(config.GetSection(Settings.SectionName).Get<Settings>()!);
 
-        return services;
+            return services;
+        }
     }
 }

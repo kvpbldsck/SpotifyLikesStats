@@ -1,6 +1,6 @@
-namespace Spotify.Misc;
+namespace Misc;
 
-public static class MiscExtensions
+public static class CommonExtensions
 {
     extension(UriBuilder builder)
     {
