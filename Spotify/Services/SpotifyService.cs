@@ -12,7 +12,7 @@ internal sealed class SpotifyService(SpotifyApi api) : ISpotifyService
                 t.Id,
                 t.Name,
                 Artists: t.Artists.Select(a => new ArtistInfoDto(a.Id, a.Name)).ToArray(),
-                Album: new (t.Album.Id, t.Album.Name)))
+                Album: new (t.Album.Id, t.Album.Name, t.Album.Artists.Select(a => new ArtistInfoDto(a.Id, a.Name)).ToArray())))
             .ToArray();
     }
 }

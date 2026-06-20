@@ -57,4 +57,7 @@ internal sealed class SpotifySimplifiedAlbum
 
     [JsonPropertyName("id")]
     public string Id { get; set; }
+
+    [JsonPropertyName("artists")]
+    public SpotifySimplifiedArtist[] Artists { get; set; }
 }

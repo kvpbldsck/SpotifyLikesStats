@@ -23,11 +23,14 @@ internal sealed partial class SpotifyApi(Settings settings, IHttpReceiver httpRe
             .Uri
             .ToString();
 
-        while (nextBunch is not null && result.Count < pagesToFetch)
+        while (nextBunch is not null && pagesToFetch > 0)
         {
+            pagesToFetch -= 1;
+
             var response = await httpClient.GetAsync(nextBunch);
             response.EnsureSuccessStatusCode();
             var bunch = await response.Content.ReadFromJsonAsync<SpotifyUserSavedTracksResponse>();
+
             nextBunch = bunch?.NextBunch;
             result.AddRange(bunch?.SavedTracks.Select(t => t.Track) ?? Array.Empty<SpotifyTrack>());
         }

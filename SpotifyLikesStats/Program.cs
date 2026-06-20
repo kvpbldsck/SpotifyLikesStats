@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Spotify;
 using Spotify.Services;
 using Stats;
+using Stats.Models;
 
 namespace SpotifyLikesStats;
 
@@ -32,19 +33,19 @@ public class Program
         var spotifyService = services.GetRequiredService<ISpotifyService>();
         var statsService = services.GetRequiredService<IStatsService>();
 
-        var tracks = await spotifyService.GetLikedTracksAsync(2);
+        var tracks = await spotifyService.GetLikedTracksAsync(4);
         var stats = statsService.GetStats(tracks);
 
         Console.WriteLine(tracks.Count);
         Console.WriteLine("Top artists:");
-        foreach ((int index, string item) in stats.TopArtists.Index())
+        foreach ((int index, RatedItem item) in stats.TopArtists.Index())
         {
-            Console.WriteLine($"{index + 1}. {item}");
+            Console.WriteLine($"{index + 1}. {item.ItemName} ({item.Rate} {(item.Rate == 1 ? "track" : "tracks")} liked)");
         }
         Console.WriteLine("Top albums:");
-        foreach ((int index, string item) in stats.TopAlbums.Index())
+        foreach ((int index, RatedItem item) in stats.TopAlbums.Index())
         {
-            Console.WriteLine($"{index + 1}. {item}");
+            Console.WriteLine($"{index + 1}. {item.ItemName} ({item.Rate} {(item.Rate == 1 ? "track" : "tracks")} liked)");
         }
     }
 }
