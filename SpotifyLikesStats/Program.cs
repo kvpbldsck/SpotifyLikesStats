@@ -1,9 +1,8 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Presenter;
 using Spotify;
-using Spotify.Services;
 using Stats;
-using Stats.Models;
 
 namespace SpotifyLikesStats;
 
@@ -18,12 +17,11 @@ public class Program
             .AddJsonFile("appsettings.Local.json", optional: true)
             .Build();
 
-        services
-            .AddSingleton(config)
+        var provider = services
             .AddSpotify(config)
-            .AddStats();
-
-        var provider = services.BuildServiceProvider();
+            .AddStats()
+            .AddView()
+            .BuildServiceProvider();
 
         Task.WaitAll(DoStuff(provider));
     }
@@ -32,20 +30,10 @@ public class Program
     {
         var spotifyService = services.GetRequiredService<ISpotifyService>();
         var statsService = services.GetRequiredService<IStatsService>();
+        var viewService = services.GetRequiredService<IViewService>();
 
-        var tracks = await spotifyService.GetLikedTracksAsync(4);
+        var tracks = await spotifyService.GetLikedTracksAsync(1);
         var stats = statsService.GetStats(tracks);
-
-        Console.WriteLine(tracks.Count);
-        Console.WriteLine("Top artists:");
-        foreach ((int index, RatedItem item) in stats.TopArtists.Index())
-        {
-            Console.WriteLine($"{index + 1}. {item.ItemName} ({item.Rate} {(item.Rate == 1 ? "track" : "tracks")} liked)");
-        }
-        Console.WriteLine("Top albums:");
-        foreach ((int index, RatedItem item) in stats.TopAlbums.Index())
-        {
-            Console.WriteLine($"{index + 1}. {item.ItemName} ({item.Rate} {(item.Rate == 1 ? "track" : "tracks")} liked)");
-        }
+        viewService.ShowStats(stats);
     }
 }

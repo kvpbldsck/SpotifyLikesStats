@@ -9,7 +9,7 @@ internal sealed class StatsService : IStatsService
         var artists = tracks
             .SelectMany(t => t.Artists)
             .GroupBy(a => a.Id)
-            .Select(g => new RatedItem(g.First().ToString(), g.Count()))
+            .Select(g => new RatedItem<ArtistInfoDto>(g.First(), g.Count()))
             .OrderByDescending(r => r.Rate)
             .Take(topArtists)
             .ToArray();
@@ -17,7 +17,7 @@ internal sealed class StatsService : IStatsService
         var albums = tracks
             .Select(t => t.Album)
             .GroupBy(a => a.Id)
-            .Select(g => new RatedItem(g.First().ToString(), g.Count()))
+            .Select(g => new RatedItem<AlbumInfoDto>(g.First(), g.Count()))
             .OrderByDescending(r => r.Rate)
             .Take(topAlbums)
             .ToArray();

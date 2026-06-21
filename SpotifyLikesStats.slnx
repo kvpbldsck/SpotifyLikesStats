@@ -3,4 +3,5 @@
   <Project Path="Spotify/Spotify.csproj" />
   <Project Path="SpotifyLikesStats/SpotifyLikesStats.csproj" />
   <Project Path="Stats/Stats.csproj" />
+  <Project Path="View/View.csproj" />
 </Solution>

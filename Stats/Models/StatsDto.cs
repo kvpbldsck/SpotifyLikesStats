@@ -1,7 +1,7 @@
 namespace Stats.Models;
 
 public sealed record StatsDto(
-    IReadOnlyCollection<RatedItem> TopArtists,
-    IReadOnlyCollection<RatedItem> TopAlbums);
+    IReadOnlyCollection<RatedItem<ArtistInfoDto>> TopArtists,
+    IReadOnlyCollection<RatedItem<AlbumInfoDto>> TopAlbums);
 
-public sealed record RatedItem(string ItemName, int Rate);
+public sealed record RatedItem<T>(T Item, int Rate);
