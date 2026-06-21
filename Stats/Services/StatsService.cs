@@ -4,7 +4,7 @@ namespace Stats.Services;
 
 internal sealed class StatsService : IStatsService
 {
-    public StatsDto GetStats(IReadOnlyCollection<TrackInfoDto> tracks, int topArtists = 5, int topAlbums = 5)
+    public StatsDto GetStats(IReadOnlyCollection<TrackInfoDto> tracks, int topArtists, int topAlbums)
     {
         var artists = tracks
             .SelectMany(t => t.Artists)

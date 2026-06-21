@@ -2,12 +2,7 @@ using System.Net;
 
 namespace Spotify.Services;
 
-internal interface IHttpReceiver
-{
-    Task<HttpListenerRequest> ReceiveRequest(string receiveUrl);
-}
-
-internal sealed class HttpReceiver : IHttpReceiver
+internal sealed class HttpReceiver
 {
     public async Task<HttpListenerRequest> ReceiveRequest(string receiveUrl)
     {

@@ -4,8 +4,9 @@ using Spotify.Models;
 
 namespace Spotify.Services;
 
-internal sealed partial class SpotifyApi(Settings settings, IHttpReceiver httpReceiver)
+internal sealed partial class SpotifyApi(Settings settings, HttpReceiver httpReceiver)
 {
+    private const int MaxSpotifyLimit = 50;
     private static HttpClient? _httpClient = null;
 
     public async Task<IReadOnlyCollection<SpotifyTrack>> GetSavedTracksAsync(int pagesToFetch)
@@ -17,7 +18,7 @@ internal sealed partial class SpotifyApi(Settings settings, IHttpReceiver httpRe
         string? nextBunch = new UriBuilder(settings.GetUserSavedTracksUrl)
             .SetQuery(new()
             {
-                {"limit", 50},
+                {"limit", MaxSpotifyLimit},
                 {"offset", 0}
             })
             .Uri

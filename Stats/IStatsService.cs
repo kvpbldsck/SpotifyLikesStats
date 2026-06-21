@@ -4,5 +4,7 @@ namespace Stats;
 
 public interface IStatsService
 {
-    StatsDto GetStats(IReadOnlyCollection<TrackInfoDto> tracks, int topArtists = 5, int topAlbums = 5);
+    const int DefaultTopAmount = 5;
+
+    StatsDto GetStats(IReadOnlyCollection<TrackInfoDto> tracks, int topArtists = DefaultTopAmount, int topAlbums = DefaultTopAmount);
 }

@@ -13,8 +13,8 @@ public static class ServiceCollectionExtensions
         {
             services.AddSingleton<SpotifyApi>();
             services.AddSingleton<ISpotifyService, SpotifyService>();
-            services.AddSingleton<IHttpReceiver, HttpReceiver>();
-            services.AddSingleton(config.GetSection(Settings.SectionName).Get<Settings>()!);
+            services.AddSingleton<HttpReceiver>();
+            services.AddSingleton(config.GetRequiredSection(Settings.SectionName).Get<Settings>()!);
 
             return services;
         }
