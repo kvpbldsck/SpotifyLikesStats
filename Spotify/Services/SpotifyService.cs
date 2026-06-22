@@ -1,12 +1,16 @@
+using Application.Contracts;
 using Stats.Models;
 
 namespace Spotify.Services;
 
-internal sealed class SpotifyService(SpotifyApi api) : ISpotifyService
+internal sealed class SpotifyService(SpotifyApi api) : ITracksService
 {
-    public async Task<IReadOnlyCollection<TrackInfoDto>> GetLikedTracksAsync(int pagesToFetch)
+    public async Task<IReadOnlyCollection<TrackInfoDto>> GetLikedTracksAsync(
+        int pagesToFetch,
+        Action<int> onTracksAmountFetched,
+        Action<int> onPageFetched)
     {
-        var spotifyResponse = await api.GetSavedTracksAsync(pagesToFetch);
+        var spotifyResponse = await api.GetSavedTracksAsync(pagesToFetch, onTracksAmountFetched, onPageFetched);
         return spotifyResponse
             .Select(t => new TrackInfoDto(
                 t.Id,

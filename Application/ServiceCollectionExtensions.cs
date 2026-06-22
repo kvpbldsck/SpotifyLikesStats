@@ -1,16 +1,14 @@
-using Application.Contracts;
 using Microsoft.Extensions.DependencyInjection;
-using Presenter.Services;
 
-namespace Presenter;
+namespace Application;
 
 public static class ServiceCollectionExtensions
 {
     extension(IServiceCollection services)
     {
-        public IServiceCollection AddView()
+        public IServiceCollection AddApplication()
         {
-            services.AddSingleton<IViewService, ViewService>();
+            services.AddSingleton<CalcLikesStatsUseCase>();
 
             return services;
         }

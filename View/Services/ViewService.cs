@@ -1,4 +1,5 @@
-﻿using Misc;
+﻿using Application.Contracts;
+using Misc;
 using Spectre.Console;
 using Stats.Models;
 
@@ -23,6 +24,39 @@ internal sealed class ViewService : IViewService
                 Padding = new Padding(0, VerticalPadding)
             });
     }
+
+    public async Task<T> ShowProgressBarAsync<T>(Func<SetProgressBarGoal, IncrementProgressBar, Task<T>> whileProgressRunsAsync) =>
+        await AnsiConsole.Progress().StartAsync(
+            async ctx =>
+            {
+                var task = ctx.AddTask("Connecting to server")
+                    .IsIndeterminate();
+
+                var result = await whileProgressRunsAsync(
+                    SetProgressBarGoal,
+                    IncrementProgressBar);
+
+                task.StopTask();
+
+                return result;
+
+                void SetProgressBarGoal(int goal)
+                {
+                    if (!ctx.IsFinished && task is { IsFinished: false, IsIndeterminate: true })
+                    {
+                        task.IsIndeterminate(false);
+                        task.MaxValue(goal);
+                    }
+                }
+
+                void IncrementProgressBar(int value)
+                {
+                    if (!ctx.IsFinished && !task.IsFinished)
+                    {
+                        task.Increment(value);
+                    }
+                }
+            });
 
     private static Panel PreparePanel<T>(IReadOnlyCollection<RatedItem<T>> itemsToShow, string header, Func<T, string> getLabel)
     {
