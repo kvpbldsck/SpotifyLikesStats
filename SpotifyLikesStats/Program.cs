@@ -1,8 +1,9 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Application;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Presenter;
 using Spotify;
 using Stats;
+using View;
 
 namespace SpotifyLikesStats;
 
@@ -15,7 +16,7 @@ public static class Program
             .Wait();
     }
 
-    private static Application PrepareApplication()
+    private static CalcLikesStatsUseCase PrepareApplication()
     {
         var services = new ServiceCollection();
 
@@ -28,9 +29,9 @@ public static class Program
             .AddSpotify(config)
             .AddStats()
             .AddView()
-            .AddSingleton<Application>()
+            .AddApplication()
             .BuildServiceProvider();
 
-        return provider.GetRequiredService<Application>();
+        return provider.GetRequiredService<CalcLikesStatsUseCase>();
     }
 }

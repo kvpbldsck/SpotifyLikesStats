@@ -1,8 +1,10 @@
-﻿using Misc;
+﻿using Application.Contracts;
+using Misc;
 using Spectre.Console;
 using Stats.Models;
+using View.SpectreConsole;
 
-namespace Presenter.Services;
+namespace View.Services;
 
 internal sealed class ViewService : IViewService
 {
@@ -11,6 +13,24 @@ internal sealed class ViewService : IViewService
     private const string TopArtistsLabel = "Top artists";
     private const string TopAlbumsLabel = "Top albums";
     private static readonly Color[] _availableColors = [Color.Blue, Color.Yellow, Color.Red, Color.Green, Color.Violet];
+
+    public async Task<T> ShowProgressBarAsync<T>(string progressDescription, Func<IProgressTracker, Task<T>> whileProgressRunsAsync) =>
+        await AnsiConsole.Progress()
+            .Columns(
+                new TaskDescriptionColumn(),
+                new ProgressBarColumn() { CompletedStyle = Color.Blue },
+                new ProgressBarCounterColumn())
+            .AutoClear(true)
+            .HideCompleted(true)
+            .StartAsync(
+                async ctx =>
+                {
+                    var task = ctx.AddTask(progressDescription)
+                        .IsIndeterminate();
+                    var tracker = new SpectreProgressTracker(ctx, task);
+
+                    return await whileProgressRunsAsync(tracker);
+                });
 
     public void ShowStats(StatsDto stats)
     {

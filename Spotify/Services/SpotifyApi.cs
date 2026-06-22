@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using Application.Contracts;
 using Misc;
 using Spotify.Models;
 
@@ -9,7 +10,9 @@ internal sealed partial class SpotifyApi(Settings settings, HttpReceiver httpRec
     private const int MaxSpotifyLimit = 50;
     private static HttpClient? _httpClient = null;
 
-    public async Task<IReadOnlyCollection<SpotifyTrack>> GetSavedTracksAsync(int pagesToFetch)
+    public async Task<IReadOnlyCollection<SpotifyTrack>> GetSavedTracksAsync(
+        int tracksToFetch,
+        IProgressTracker progressTracker)
     {
         var httpClient = await PrepareHttpClient();
 
@@ -24,13 +27,18 @@ internal sealed partial class SpotifyApi(Settings settings, HttpReceiver httpRec
             .Uri
             .ToString();
 
-        while (nextBunch is not null && pagesToFetch > 0)
+        while (nextBunch is not null && result.Count < tracksToFetch)
         {
-            pagesToFetch -= 1;
-
             var response = await httpClient.GetAsync(nextBunch);
             response.EnsureSuccessStatusCode();
-            var bunch = await response.Content.ReadFromJsonAsync<SpotifyUserSavedTracksResponse>();
+            SpotifyUserSavedTracksResponse bunch = (await response.Content.ReadFromJsonAsync<SpotifyUserSavedTracksResponse>())!;
+
+            if (result.Count == 0)
+            {
+                progressTracker.SetGoal(Math.Min(bunch.TotalSavedTracks, tracksToFetch));
+            }
+
+            progressTracker.IncreaseProgress(bunch.SavedTracks.Length);
 
             nextBunch = bunch?.NextBunch;
             result.AddRange(bunch?.SavedTracks.Select(t => t.Track) ?? Array.Empty<SpotifyTrack>());
