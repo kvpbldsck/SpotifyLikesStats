@@ -6,9 +6,16 @@ using Stats;
 
 namespace SpotifyLikesStats;
 
-public class Program
+public static class Program
 {
-    public static void Main(string[] args)
+    public static void Main()
+    {
+        PrepareApplication()
+            .RunAsync()
+            .Wait();
+    }
+
+    private static Application PrepareApplication()
     {
         var services = new ServiceCollection();
 
@@ -21,19 +28,9 @@ public class Program
             .AddSpotify(config)
             .AddStats()
             .AddView()
+            .AddSingleton<Application>()
             .BuildServiceProvider();
 
-        Task.WaitAll(DoStuff(provider));
-    }
-
-    private static async Task DoStuff(ServiceProvider services)
-    {
-        var spotifyService = services.GetRequiredService<ISpotifyService>();
-        var statsService = services.GetRequiredService<IStatsService>();
-        var viewService = services.GetRequiredService<IViewService>();
-
-        var tracks = await spotifyService.GetLikedTracksAsync(1);
-        var stats = statsService.GetStats(tracks);
-        viewService.ShowStats(stats);
+        return provider.GetRequiredService<Application>();
     }
 }
