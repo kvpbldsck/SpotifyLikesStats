@@ -48,9 +48,9 @@ internal sealed class SpotifyService(SpotifyClient api, Settings settings) : ITr
             MapAlbumInfo(track.Track.Album));
 
         AlbumInfoDto MapAlbumInfo(SpotifySimplifiedAlbum album)
-            => new(album.Id, album.Name, MapArtistsInfo(album.Artists));
+            => new(album.Id, album.Name, album.ExternalUrls.SpotifyUrl, MapArtistsInfo(album.Artists));
 
         ArtistInfoDto[] MapArtistsInfo(IReadOnlyCollection<SpotifySimplifiedArtist> artists)
-            => artists.Select(a => new ArtistInfoDto(a.Id, a.Name)).ToArray();
+            => artists.Select(a => new ArtistInfoDto(a.Id, a.Name, a.ExternalUrls.SpotifyUrl)).ToArray();
     }
 }

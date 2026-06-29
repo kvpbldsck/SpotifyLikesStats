@@ -6,6 +6,6 @@ public sealed record TrackInfoDto(
     ArtistInfoDto[] Artists,
     AlbumInfoDto Album);
 
-public sealed record AlbumInfoDto(string Id, string Name, ArtistInfoDto[] Artists);
+public sealed record AlbumInfoDto(string Id, string Name, string Url, ArtistInfoDto[] Artists);
 
-public sealed record ArtistInfoDto(string Id, string Name);
+public sealed record ArtistInfoDto(string Id, string Name, string Url);

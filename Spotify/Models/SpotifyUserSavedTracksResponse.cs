@@ -48,6 +48,9 @@ internal sealed class SpotifySimplifiedArtist
 
     [JsonPropertyName("id")]
     public string Id { get; set; }
+
+    [JsonPropertyName("external_urls")]
+    public SpotifyExternalUrls ExternalUrls { get; set; }
 }
 
 internal sealed class SpotifySimplifiedAlbum
@@ -60,4 +63,13 @@ internal sealed class SpotifySimplifiedAlbum
 
     [JsonPropertyName("artists")]
     public SpotifySimplifiedArtist[] Artists { get; set; }
+
+    [JsonPropertyName("external_urls")]
+    public SpotifyExternalUrls ExternalUrls { get; set; }
+}
+
+public sealed class SpotifyExternalUrls
+{
+    [JsonPropertyName("spotify")]
+    public string SpotifyUrl { get; set; }
 }
