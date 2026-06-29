@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
@@ -8,14 +7,31 @@ using Spotify.Models;
 
 namespace Spotify.Services;
 
-internal sealed partial class SpotifyApi
+internal sealed class SpotifyClient(Settings settings, HttpReceiver httpReceiver)
 {
-    private async Task<AuthenticationHeaderValue> GenerateAccessToken(HttpClient httpClient)
+    private readonly HttpClient _httpClient = new();
+
+    public async Task<T> GetAsync<T>(string url)
     {
+        await EnsureAuthorizedAsync();
+
+        var response = await _httpClient.GetAsync(url);
+        response.EnsureSuccessStatusCode();
+
+        return (await response.Content.ReadFromJsonAsync<T>())!;
+    }
+
+    private async Task EnsureAuthorizedAsync()
+    {
+        if (_httpClient.DefaultRequestHeaders.Authorization is not null)
+        {
+            return;
+        }
+
         (string codeVerifier, string codeChallenge) = PreparePkceData();
-        string userAuthCode = await GenerateUserAuthCode(codeChallenge);
-        SpotifyTokenResponse accessToken = await GenerateAccessToken(httpClient, userAuthCode, codeVerifier);
-        return new AuthenticationHeaderValue(accessToken.TokenType, accessToken.AccessToken);
+        string userAuthCode = await GenerateUserAuthCodeAsync(codeChallenge);
+        SpotifyTokenResponse accessToken = await GenerateAccessTokenAsync(userAuthCode, codeVerifier);
+        _httpClient.DefaultRequestHeaders.Authorization = new (accessToken.TokenType, accessToken.AccessToken);
     }
 
     private (string codeVerifier, string codeChallenge) PreparePkceData()
@@ -27,19 +43,15 @@ internal sealed partial class SpotifyApi
         return (codeVerifier, codeChallenge);
     }
 
-    private async Task<string> GenerateUserAuthCode(string codeChallenge)
+    private async Task<string> GenerateUserAuthCodeAsync(string codeChallenge)
     {
-        string authUrl = new UriBuilder(settings.AuthUrl)
-            .SetQuery(new()
-            {
-                { "response_type", "code" },
-                { "client_id", settings.ClientId },
-                { "scope", settings.Scope },
-                { "code_challenge_method", "S256" },
-                { "code_challenge", codeChallenge },
-                { "redirect_uri", settings.RedirectUrl },
-            })
-            .Uri
+        string authUrl = new UrlBuilder(settings.AuthUrl)
+            .WithQueryParam("response_type", "code")
+            .WithQueryParam("client_id", settings.ClientId)
+            .WithQueryParam("scope", settings.Scope)
+            .WithQueryParam("code_challenge_method", "S256")
+            .WithQueryParam("code_challenge", codeChallenge)
+            .WithQueryParam("redirect_uri", settings.RedirectUrl)
             .ToString();
 
         var spotifyRedirectTask = httpReceiver.ReceiveRequest(settings.RedirectUrl);
@@ -50,8 +62,7 @@ internal sealed partial class SpotifyApi
         return spotifyRedirect.QueryString["code"]!;
     }
 
-    private async Task<SpotifyTokenResponse> GenerateAccessToken(
-        HttpClient httpClient,
+    private async Task<SpotifyTokenResponse> GenerateAccessTokenAsync(
         string userAuthCode,
         string codeVerifier)
     {
@@ -65,7 +76,7 @@ internal sealed partial class SpotifyApi
             { "code_verifier", codeVerifier }
         });
 
-        var response = await httpClient.PostAsync(url, httpContent);
+        var response = await _httpClient.PostAsync(url, httpContent);
         response.EnsureSuccessStatusCode();
         return (await response.Content.ReadFromJsonAsync<SpotifyTokenResponse>())!;
     }

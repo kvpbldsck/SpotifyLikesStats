@@ -9,7 +9,7 @@ public sealed class CalcLikesStatsUseCase(ITracksService tracksService, IStatsSe
     {
         var tracks = await viewService.ShowProgressBarAsync(
             "Fetch Spotify likes",
-            async progressTracker => await tracksService.GetLikedTracksAsync(progressTracker));
+            async progressTracker => await tracksService.GetLikedTracksAsync(progressTracker, 500));
 
         var stats = statsService.GetStats(tracks);
 

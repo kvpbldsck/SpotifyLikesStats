@@ -13,12 +13,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Update="Services\SpotifyApi.Auth.cs">
-        <DependentUpon>SpotifyApi.cs</DependentUpon>
-      </Compile>
-    </ItemGroup>
-
-    <ItemGroup>
       <ProjectReference Include="..\Application\Application.csproj" />
       <ProjectReference Include="..\Misc\Misc.csproj" />
       <ProjectReference Include="..\Stats\Stats.csproj" />

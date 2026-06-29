@@ -12,7 +12,7 @@ public static class ServiceCollectionExtensions
     {
         public IServiceCollection AddSpotify(IConfigurationRoot config)
         {
-            services.AddSingleton<SpotifyApi>();
+            services.AddSingleton<SpotifyClient>();
             services.AddSingleton<ITracksService, SpotifyService>();
             services.AddSingleton<HttpReceiver>();
             services.AddSingleton(config.GetRequiredSection(Settings.SectionName).Get<Settings>()!);
