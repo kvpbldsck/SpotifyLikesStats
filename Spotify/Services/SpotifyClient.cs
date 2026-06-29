@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Net.Http.Json;
+using System.Net.Mime;
 using System.Security.Cryptography;
 using System.Text;
 using Misc;
@@ -7,9 +8,11 @@ using Spotify.Models;
 
 namespace Spotify.Services;
 
-internal sealed class SpotifyClient(Settings settings, HttpReceiver httpReceiver)
+internal sealed class SpotifyClient(Settings settings, LocalHttpServer localHttpServer)
 {
     private readonly HttpClient _httpClient = new();
+    private const string RedirectHtml =
+        "<!DOCTYPE html><html><body><p>Authorization is finished. This tab will be, probably, automatically closed in 5 seconds or you can close it manually. Please return back to the app.</p><script>setTimeout(window.close, 5000)</script></body></html>";
 
     public async Task<T> GetAsync<T>(string url)
     {
@@ -54,12 +57,17 @@ internal sealed class SpotifyClient(Settings settings, HttpReceiver httpReceiver
             .WithQueryParam("redirect_uri", settings.RedirectUrl)
             .ToString();
 
-        var spotifyRedirectTask = httpReceiver.ReceiveRequest(settings.RedirectUrl);
+        using var spotifyRedirectSession = localHttpServer.StartListen(settings.RedirectUrl);
 
         Process.Start(new ProcessStartInfo { FileName = authUrl, UseShellExecute = true });
 
-        var spotifyRedirect = await spotifyRedirectTask;
-        return spotifyRedirect.QueryString["code"]!;
+        var spotifyRedirect = await spotifyRedirectSession.WaitForRequest();
+
+        string code = spotifyRedirect.QueryString["code"]!;
+
+        await spotifyRedirectSession.ThenRespond(RedirectHtml, MediaTypeNames.Text.Html);
+
+        return code;
     }
 
     private async Task<SpotifyTokenResponse> GenerateAccessTokenAsync(

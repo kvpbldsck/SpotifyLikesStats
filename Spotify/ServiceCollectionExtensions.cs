@@ -14,7 +14,7 @@ public static class ServiceCollectionExtensions
         {
             services.AddSingleton<SpotifyClient>();
             services.AddSingleton<ITracksService, SpotifyService>();
-            services.AddSingleton<HttpReceiver>();
+            services.AddSingleton<LocalHttpServer>();
             services.AddSingleton(config.GetRequiredSection(Settings.SectionName).Get<Settings>()!);
 
             return services;
