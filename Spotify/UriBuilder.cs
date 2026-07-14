@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Text;
 
-namespace Misc;
+namespace Spotify;
 
 public struct UrlBuilder(string hostAndPath)
 {
