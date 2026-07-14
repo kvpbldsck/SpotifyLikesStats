@@ -10,4 +10,8 @@
       <ProjectReference Include="..\Stats\Stats.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="CSharpFunctionalExtensions" />
+    </ItemGroup>
+
 </Project>

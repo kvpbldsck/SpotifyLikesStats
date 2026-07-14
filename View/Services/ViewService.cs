@@ -1,4 +1,6 @@
 ﻿using Application.Contracts;
+using Application.Models;
+using CSharpFunctionalExtensions;
 using Misc;
 using Spectre.Console;
 using Stats.Models;
@@ -32,7 +34,7 @@ internal sealed class ViewService : IViewService
                     return await whileProgressRunsAsync(tracker);
                 });
 
-    public void ShowStats(StatsDto stats)
+    public UnitResult<Error> ShowStats(StatsDto stats)
     {
         AnsiConsole.Write(
             new Columns(
@@ -42,6 +44,13 @@ internal sealed class ViewService : IViewService
                 Expand = true,
                 Padding = new Padding(0, VerticalPadding)
             });
+
+        return UnitResult.Success<Error>();
+    }
+
+    public void ShowError(Error error)
+    {
+        AnsiConsole.MarkupLine($"[red]{error}[/]");
     }
 
     private static Panel PrepareStatsPanel<T>(IReadOnlyCollection<RatedItem<T>> itemsToShow, string header, Func<T, string> getLabel)

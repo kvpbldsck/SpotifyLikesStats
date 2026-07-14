@@ -1,5 +1,8 @@
 ﻿using Application.Contracts;
+using Application.Models;
+using CSharpFunctionalExtensions;
 using Stats;
+using Stats.Models;
 
 namespace Application;
 
@@ -7,12 +10,14 @@ public sealed class CalcLikesStatsUseCase(ITracksService tracksService, IStatsSe
 {
     public async Task RunAsync()
     {
-        var tracks = await viewService.ShowProgressBarAsync(
-            "Fetch Spotify likes",
-            async progressTracker => await tracksService.GetLikedTracksAsync(progressTracker, 500));
+        await viewService.ShowProgressBarAsync("Fetch Spotify likes", GetLikes)
+            .Bind(t => Result.Success<StatsDto, Error>(statsService.GetStats(t)))
+            .Bind(viewService.ShowStats)
+            .TapError(viewService.ShowError);
 
-        var stats = statsService.GetStats(tracks);
+        return;
 
-        viewService.ShowStats(stats);
+        async Task<Result<IReadOnlyCollection<TrackInfoDto>, Error>> GetLikes(IProgressTracker progressTracker)
+            => await tracksService.GetLikedTracksAsync(progressTracker);
     }
 }

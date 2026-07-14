@@ -22,14 +22,6 @@ internal sealed class SpectreProgressTracker(ProgressContext context, ProgressTa
         }
     }
 
-    public void SetDescription(string description)
-    {
-        if (CanChange())
-        {
-            task.Description(description);
-        }
-    }
-
     private bool CanChange() =>
         !context.IsFinished
         && !task.IsFinished;

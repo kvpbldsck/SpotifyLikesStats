@@ -1,8 +1,10 @@
-﻿using Stats.Models;
+﻿using Application.Models;
+using CSharpFunctionalExtensions;
+using Stats.Models;
 
 namespace Application.Contracts;
 
 public interface ITracksService
 {
-    Task<IReadOnlyCollection<TrackInfoDto>> GetLikedTracksAsync(IProgressTracker progressTracker, int tracksToFetch = int.MaxValue);
+    Task<Result<IReadOnlyCollection<TrackInfoDto>, Error>> GetLikedTracksAsync(IProgressTracker progressTracker, int tracksToFetch = int.MaxValue);
 }

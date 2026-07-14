@@ -1,4 +1,6 @@
 using Application.Contracts;
+using Application.Models;
+using CSharpFunctionalExtensions;
 using Misc;
 using Spotify.Models;
 using Stats.Models;
@@ -9,7 +11,7 @@ internal sealed class SpotifyService(SpotifyClient api, Settings settings) : ITr
 {
     private const int MaxSpotifyLimit = 50;
 
-    public async Task<IReadOnlyCollection<TrackInfoDto>> GetLikedTracksAsync(
+    public async Task<Result<IReadOnlyCollection<TrackInfoDto>, Error>> GetLikedTracksAsync(
         IProgressTracker progressTracker,
         int tracksToFetch)
     {
@@ -22,18 +24,17 @@ internal sealed class SpotifyService(SpotifyClient api, Settings settings) : ITr
 
         while (nextBunch is not null && result.Count < tracksToFetch)
         {
-            SpotifyUserSavedTracksResponse response = await api.GetAsync<SpotifyUserSavedTracksResponse>(nextBunch);
+            var response = await api.GetAsync<SpotifyUserSavedTracksResponse>(nextBunch)
+                .TapIf(result.Count == 0, r => progressTracker.SetGoal(Math.Min(r.TotalSavedTracks, tracksToFetch)))
+                .Tap(r => progressTracker.IncreaseProgress(r.SavedTracks.Length))
+                .Tap(r => nextBunch = r.NextBunch)
+                .Map(r => r.SavedTracks.Select(MapTrackInfo))
+                .Tap(result.AddRange);
 
-            if (result.Count == 0)
+            if (response.IsFailure)
             {
-                progressTracker.SetGoal(Math.Min(response.TotalSavedTracks, tracksToFetch));
+                return response.Error;
             }
-
-            progressTracker.IncreaseProgress(response.SavedTracks.Length);
-
-            nextBunch = response.NextBunch;
-            result.AddRange(
-                response.SavedTracks.Select(MapTrackInfo));
         }
 
         return result;

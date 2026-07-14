@@ -1,8 +1,11 @@
 using System.Diagnostics;
+using System.Net;
 using System.Net.Http.Json;
 using System.Net.Mime;
 using System.Security.Cryptography;
 using System.Text;
+using Application.Models;
+using CSharpFunctionalExtensions;
 using Misc;
 using Spotify.Models;
 
@@ -14,27 +17,24 @@ internal sealed class SpotifyClient(Settings settings, LocalHttpServer localHttp
     private const string RedirectHtml =
         "<!DOCTYPE html><html><body><p>Authorization is finished. This tab will be, probably, automatically closed in 5 seconds or you can close it manually. Please return back to the app.</p><script>setTimeout(window.close, 5000)</script></body></html>";
 
-    public async Task<T> GetAsync<T>(string url)
+    public async Task<Result<T, Error>> GetAsync<T>(string url)
     {
-        await EnsureAuthorizedAsync();
-
-        var response = await _httpClient.GetAsync(url);
-        response.EnsureSuccessStatusCode();
-
-        return (await response.Content.ReadFromJsonAsync<T>())!;
+        return await AuthorizeIfNeededAsync()
+            .Bind(async () => await SendRequestAsync<T>(new (HttpMethod.Get, url)));
     }
 
-    private async Task EnsureAuthorizedAsync()
+    private async Task<UnitResult<Error>> AuthorizeIfNeededAsync()
     {
         if (_httpClient.DefaultRequestHeaders.Authorization is not null)
         {
-            return;
+            return UnitResult.Success<Error>();
         }
 
         (string codeVerifier, string codeChallenge) = PreparePkceData();
-        string userAuthCode = await GenerateUserAuthCodeAsync(codeChallenge);
-        SpotifyTokenResponse accessToken = await GenerateAccessTokenAsync(userAuthCode, codeVerifier);
-        _httpClient.DefaultRequestHeaders.Authorization = new (accessToken.TokenType, accessToken.AccessToken);
+
+        return await GenerateUserAuthCodeAsync(codeChallenge)
+            .Bind(userAuthCode => GenerateAccessTokenAsync(userAuthCode, codeVerifier))
+            .Tap(accessToken => _httpClient.DefaultRequestHeaders.Authorization = new (accessToken.TokenType, accessToken.AccessToken));
     }
 
     private (string codeVerifier, string codeChallenge) PreparePkceData()
@@ -46,7 +46,7 @@ internal sealed class SpotifyClient(Settings settings, LocalHttpServer localHttp
         return (codeVerifier, codeChallenge);
     }
 
-    private async Task<string> GenerateUserAuthCodeAsync(string codeChallenge)
+    private async Task<Result<string, Error>> GenerateUserAuthCodeAsync(string codeChallenge)
     {
         string authUrl = new UrlBuilder(settings.AuthUrl)
             .WithQueryParam("response_type", "code")
@@ -63,14 +63,16 @@ internal sealed class SpotifyClient(Settings settings, LocalHttpServer localHttp
 
         var spotifyRedirect = await spotifyRedirectSession.WaitForRequest();
 
-        string code = spotifyRedirect.QueryString["code"]!;
+        string? code = spotifyRedirect.QueryString["code"];
 
         await spotifyRedirectSession.ThenRespond(RedirectHtml, MediaTypeNames.Text.Html);
 
-        return code;
+        return string.IsNullOrWhiteSpace(code)
+            ? Result.Failure<string, Error>(Error.Authorization("Failed to obtain authorization code."))
+            : code;
     }
 
-    private async Task<SpotifyTokenResponse> GenerateAccessTokenAsync(
+    private Task<Result<SpotifyTokenResponse, Error>> GenerateAccessTokenAsync(
         string userAuthCode,
         string codeVerifier)
     {
@@ -83,10 +85,31 @@ internal sealed class SpotifyClient(Settings settings, LocalHttpServer localHttp
             { "redirect_uri", settings.RedirectUrl },
             { "code_verifier", codeVerifier }
         });
+        var request = new HttpRequestMessage(HttpMethod.Post, url) { Content = httpContent };
 
-        var response = await _httpClient.PostAsync(url, httpContent);
-        response.EnsureSuccessStatusCode();
-        return (await response.Content.ReadFromJsonAsync<SpotifyTokenResponse>())!;
+        return SendRequestAsync<SpotifyTokenResponse>(request)
+            .MapError(_ => Error.Authorization("Spotify authorization failed"));
+    }
+
+    private async Task<Result<T, Error>> SendRequestAsync<T>(HttpRequestMessage request)
+    {
+        var response = await _httpClient.SendAsync(request);
+        if (!response.IsSuccessStatusCode)
+        {
+            return response.StatusCode switch
+            {
+                HttpStatusCode.Unauthorized => Result.Failure<T, Error>(Error.Authorization("Spotify request failed")),
+                HttpStatusCode.TooManyRequests => Result.Failure<T, Error>(Error.Request("Too many request to Spotify")),
+                _ => Result.Failure<T, Error>(Error.Authorization("Spotify request failed"))
+            };
+            // Spotify api can send error description in response body, if app will grow it is needed to be parsed
+        }
+
+        var body = await response.Content.ReadFromJsonAsync<T>();
+        return body is null
+            ? Result.Failure<T, Error>(Error.Request("Response is either empty or in unexpected format"))
+            : body;
+
     }
 
     private static string GenerateRandomString(int length)

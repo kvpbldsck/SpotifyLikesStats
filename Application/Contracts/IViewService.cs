@@ -1,10 +1,14 @@
-﻿using Stats.Models;
+﻿using Application.Models;
+using CSharpFunctionalExtensions;
+using Stats.Models;
 
 namespace Application.Contracts;
 
 public interface IViewService
 {
-    void ShowStats(StatsDto stats);
+    UnitResult<Error> ShowStats(StatsDto stats);
 
     Task<T> ShowProgressBarAsync<T>(string progressDescription, Func<IProgressTracker, Task<T>> whileProgressRunsAsync);
+
+    void ShowError(Error error);
 }
