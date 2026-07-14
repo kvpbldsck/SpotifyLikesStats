@@ -1,7 +1,7 @@
 using Spectre.Console;
 using Spectre.Console.Rendering;
 
-namespace View.Services;
+namespace View.SpectreConsole;
 
 internal sealed class ProgressBarCounterColumn(Style? style = null, Style? completedStyle = null) : ProgressColumn
 {
